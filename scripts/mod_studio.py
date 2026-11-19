@@ -118,8 +118,9 @@ class ModStudio(tk.Tk):
         self.details.configure(state="disabled")
         actions = ttk.Frame(right)
         actions.pack(fill="x", pady=(12, 0))
-        ttk.Button(actions, text="Validate", command=self.validate_project).pack(side="left")
-        ttk.Button(actions, text="Export .zip", command=self.export_project).pack(side="left", padx=8)
+        ttk.Button(actions, text="Edit cutscene", command=self.open_cutscene_editor).pack(side="left")
+        ttk.Button(actions, text="Validate", command=self.validate_project).pack(side="left", padx=8)
+        ttk.Button(actions, text="Export .zip", command=self.export_project).pack(side="left")
         ttk.Button(actions, text="Refresh", command=self.refresh_projects).pack(side="right")
 
         footer = ttk.Label(self, text="Prototype: packages are not loaded by the game yet. Do not include game dumps, keys, or extracted proprietary assets.",
@@ -227,6 +228,25 @@ class ModStudio(tk.Tk):
                                 parent=self)
         except OSError as exc:
             messagebox.showerror("Export failed", str(exc), parent=self)
+
+
+    def open_cutscene_editor(self):
+        if not self.project:
+            messagebox.showinfo("Select a project", "Choose a project first.", parent=self)
+            return
+        try:
+            data = read_manifest(self.project)
+        except Exception as exc:
+            messagebox.showerror("Invalid project", str(exc), parent=self)
+            return
+        if data["type"] != "cutscene":
+            messagebox.showinfo("Cutscene project required",
+                                "Create or select a project with type 'cutscene' first.", parent=self)
+            return
+        import subprocess
+        import sys
+        editor = ROOT / "scripts" / "cutscene_editor.py"
+        subprocess.Popen([sys.executable, str(editor), str(self.project)])
 
     def open_project(self):
         if not self.project:
